@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WC2026 — Canlı Takip</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- html2canvas: maç detay modalını resim olarak kopyalamak için -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
   --navy:#0a1628;--navy2:#0f2040;--navy3:#1a2c4e;
@@ -90,6 +92,17 @@ body::before{content:'';position:fixed;inset:0;
 .match-section-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;
   color:var(--gold);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;
   display:flex;align-items:center;gap:8px;}
+/* Tarih başlığı — yeni sistem için */
+.match-date-header{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;
+  color:var(--white);padding:10px 0 6px;margin-top:14px;margin-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;gap:8px;}
+.match-date-header:first-child{margin-top:0;}
+.match-date-header .icon{font-size:14px;}
+.match-date-header .date{color:var(--gold);}
+.match-date-header .day{color:var(--gray);font-size:11px;letter-spacing:1px;}
+.match-row-time{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;
+  color:var(--gold);}
 .match-row{background:var(--card);border:1px solid var(--border);border-radius:12px;
   margin-bottom:7px;overflow:hidden;cursor:pointer;transition:border-color 0.2s;}
 .match-row:hover{border-color:rgba(212,175,55,0.3);}
@@ -156,6 +169,7 @@ body::before{content:'';position:fixed;inset:0;
 .btn-outline{background:transparent;color:var(--white);border:1px solid var(--border);}
 .btn-green{background:var(--green);color:white;}
 .btn-gray{background:rgba(255,255,255,0.08);color:var(--gray);}
+.btn-blue{background:var(--blue);color:white;}
 
 /* Admin panel */
 .admin-section{background:var(--card);border:1px solid var(--border);
@@ -377,9 +391,14 @@ body::before{content:'';position:fixed;inset:0;
 <div class="modal-overlay" id="match-modal" onclick="closeModal(event)">
   <div class="modal" style="position:relative">
     <button class="modal-close" onclick="closeMatchModal()">✕</button>
-    <div class="modal-title" id="modal-title">Maç Detayı</div>
-    <div class="modal-sub" id="modal-sub"></div>
-    <div id="modal-content"></div>
+    <div id="modal-capture-area">
+      <div class="modal-title" id="modal-title">Maç Detayı</div>
+      <div class="modal-sub" id="modal-sub"></div>
+      <div id="modal-content"></div>
+    </div>
+    <!-- Admin için resim kopyalama butonu (yalnızca admin girişi yapıldığında görünür) -->
+    <button id="modal-copy-img-btn" class="btn btn-blue" style="display:none;margin-top:14px;"
+      onclick="copyModalAsImage()">📸 RESİM OLARAK KOPYALA</button>
   </div>
 </div>
 
@@ -413,6 +432,131 @@ const GROUPS = {
 };
 const GROUP_KEYS = Object.keys(GROUPS);
 const GM = [[0,1],[2,3],[0,2],[1,3],[3,0],[1,2]];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 🆕 MAÇ TAKVİMİ — TR Saati ile Tarih+Saat sıralı (104 maç)
+// ══════════════════════════════════════════════════════════════════════════════
+const MATCH_SCHEDULE = [
+  // GRUP MAÇLARI — FIFA gerçek takvimine göre kod-tarih eşleştirmesi (72 maç)
+  {code:'GAM3', day:'2026-06-11', dayLabel:'11 Haziran Perşembe', time:'22:00'},
+  {code:'GAM4', day:'2026-06-12', dayLabel:'12 Haziran Cuma', time:'05:00'},
+  {code:'GBM5', day:'2026-06-12', dayLabel:'12 Haziran Cuma', time:'22:00'},
+  {code:'GDM3', day:'2026-06-13', dayLabel:'13 Haziran Cumartesi', time:'04:00'},
+  {code:'GBM6', day:'2026-06-13', dayLabel:'13 Haziran Cumartesi', time:'22:00'},
+  {code:'GCM1', day:'2026-06-14', dayLabel:'14 Haziran Pazar', time:'01:00'},
+  {code:'GCM2', day:'2026-06-14', dayLabel:'14 Haziran Pazar', time:'04:00'},
+  {code:'GDM4', day:'2026-06-14', dayLabel:'14 Haziran Pazar', time:'07:00'},
+  {code:'GEM5', day:'2026-06-14', dayLabel:'14 Haziran Pazar', time:'20:00'},
+  {code:'GFM1', day:'2026-06-14', dayLabel:'14 Haziran Pazar', time:'23:00'},
+  {code:'GEM6', day:'2026-06-15', dayLabel:'15 Haziran Pazartesi', time:'02:00'},
+  {code:'GFM2', day:'2026-06-15', dayLabel:'15 Haziran Pazartesi', time:'05:00'},
+  {code:'GHM5', day:'2026-06-15', dayLabel:'15 Haziran Pazartesi', time:'19:00'},
+  {code:'GGM3', day:'2026-06-15', dayLabel:'15 Haziran Pazartesi', time:'22:00'},
+  {code:'GHM6', day:'2026-06-16', dayLabel:'16 Haziran Salı', time:'01:00'},
+  {code:'GGM4', day:'2026-06-16', dayLabel:'16 Haziran Salı', time:'04:00'},
+  {code:'GIM1', day:'2026-06-16', dayLabel:'16 Haziran Salı', time:'22:00'},
+  {code:'GIM2', day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', time:'01:00'},
+  {code:'GJM3', day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', time:'04:00'},
+  {code:'GJM4', day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', time:'07:00'},
+  {code:'GKM5', day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', time:'20:00'},
+  {code:'GLM1', day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', time:'23:00'},
+  {code:'GLM2', day:'2026-06-18', dayLabel:'18 Haziran Perşembe', time:'02:00'},
+  {code:'GKM6', day:'2026-06-18', dayLabel:'18 Haziran Perşembe', time:'05:00'},
+  {code:'GAM2', day:'2026-06-18', dayLabel:'18 Haziran Perşembe', time:'19:00'},
+  {code:'GBM4', day:'2026-06-18', dayLabel:'18 Haziran Perşembe', time:'22:00'},
+  {code:'GBM3', day:'2026-06-19', dayLabel:'19 Haziran Cuma', time:'01:00'},
+  {code:'GAM1', day:'2026-06-19', dayLabel:'19 Haziran Cuma', time:'04:00'},
+  {code:'GDM1', day:'2026-06-19', dayLabel:'19 Haziran Cuma', time:'22:00'},
+  {code:'GCM6', day:'2026-06-20', dayLabel:'20 Haziran Cumartesi', time:'01:00'},
+  {code:'GCM5', day:'2026-06-20', dayLabel:'20 Haziran Cumartesi', time:'03:30'},
+  {code:'GDM2', day:'2026-06-20', dayLabel:'20 Haziran Cumartesi', time:'06:00'},
+  {code:'GFM5', day:'2026-06-20', dayLabel:'20 Haziran Cumartesi', time:'20:00'},
+  {code:'GEM3', day:'2026-06-20', dayLabel:'20 Haziran Cumartesi', time:'23:00'},
+  {code:'GEM4', day:'2026-06-21', dayLabel:'21 Haziran Pazar', time:'03:00'},
+  {code:'GFM6', day:'2026-06-21', dayLabel:'21 Haziran Pazar', time:'07:00'},
+  {code:'GHM3', day:'2026-06-21', dayLabel:'21 Haziran Pazar', time:'19:00'},
+  {code:'GGM1', day:'2026-06-21', dayLabel:'21 Haziran Pazar', time:'22:00'},
+  {code:'GHM4', day:'2026-06-22', dayLabel:'22 Haziran Pazartesi', time:'01:00'},
+  {code:'GGM2', day:'2026-06-22', dayLabel:'22 Haziran Pazartesi', time:'04:00'},
+  {code:'GJM1', day:'2026-06-22', dayLabel:'22 Haziran Pazartesi', time:'20:00'},
+  {code:'GIM5', day:'2026-06-23', dayLabel:'23 Haziran Salı', time:'00:00'},
+  {code:'GIM6', day:'2026-06-23', dayLabel:'23 Haziran Salı', time:'03:00'},
+  {code:'GJM2', day:'2026-06-23', dayLabel:'23 Haziran Salı', time:'06:00'},
+  {code:'GKM3', day:'2026-06-23', dayLabel:'23 Haziran Salı', time:'20:00'},
+  {code:'GLM5', day:'2026-06-23', dayLabel:'23 Haziran Salı', time:'23:00'},
+  {code:'GLM6', day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', time:'02:00'},
+  {code:'GKM4', day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', time:'05:00'},
+  {code:'GBM1', day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', time:'22:00'},
+  {code:'GBM2', day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', time:'22:00'},
+  {code:'GCM3', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'01:00'},
+  {code:'GCM4', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'01:00'},
+  {code:'GAM5', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'04:00'},
+  {code:'GAM6', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'04:00'},
+  {code:'GEM1', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'23:00'},
+  {code:'GEM2', day:'2026-06-25', dayLabel:'25 Haziran Perşembe', time:'23:00'},
+  {code:'GFM3', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'02:00'},
+  {code:'GFM4', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'02:00'},
+  {code:'GDM5', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'05:00'},
+  {code:'GDM6', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'05:00'},
+  {code:'GIM3', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'22:00'},
+  {code:'GIM4', day:'2026-06-26', dayLabel:'26 Haziran Cuma', time:'22:00'},
+  {code:'GHM1', day:'2026-06-27', dayLabel:'27 Haziran Cumartesi', time:'03:00'},
+  {code:'GHM2', day:'2026-06-27', dayLabel:'27 Haziran Cumartesi', time:'03:00'},
+  {code:'GGM5', day:'2026-06-27', dayLabel:'27 Haziran Cumartesi', time:'06:00'},
+  {code:'GGM6', day:'2026-06-27', dayLabel:'27 Haziran Cumartesi', time:'06:00'},
+  {code:'GLM3', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'00:00'},
+  {code:'GLM4', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'00:00'},
+  {code:'GKM1', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'02:30'},
+  {code:'GKM2', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'02:30'},
+  {code:'GJM5', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'05:00'},
+  {code:'GJM6', day:'2026-06-28', dayLabel:'28 Haziran Pazar', time:'05:00'},
+
+  // ELEME — Round of 32
+  {code:'R32M1',  day:'2026-06-28', dayLabel:'28 Haziran Pazar',    time:'22:00'},
+  {code:'R32M3',  day:'2026-06-29', dayLabel:'29 Haziran Pazartesi',time:'20:00'},
+  {code:'R32M2',  day:'2026-06-29', dayLabel:'29 Haziran Pazartesi',time:'23:30'},
+  {code:'R32M4',  day:'2026-06-30', dayLabel:'30 Haziran Salı',     time:'04:00'},
+  {code:'R32M6',  day:'2026-06-30', dayLabel:'30 Haziran Salı',     time:'20:00'},
+  {code:'R32M5',  day:'2026-07-01', dayLabel:'1 Temmuz Çarşamba',  time:'00:00'},
+  {code:'R32M7',  day:'2026-07-01', dayLabel:'1 Temmuz Çarşamba',  time:'04:00'},
+  {code:'R32M8',  day:'2026-07-01', dayLabel:'1 Temmuz Çarşamba',  time:'19:00'},
+  {code:'R32M10', day:'2026-07-01', dayLabel:'1 Temmuz Çarşamba',  time:'23:00'},
+  {code:'R32M9',  day:'2026-07-02', dayLabel:'2 Temmuz Perşembe',  time:'03:00'},
+  {code:'R32M12', day:'2026-07-02', dayLabel:'2 Temmuz Perşembe',  time:'22:00'},
+  {code:'R32M11', day:'2026-07-03', dayLabel:'3 Temmuz Cuma',      time:'02:00'},
+  {code:'R32M13', day:'2026-07-03', dayLabel:'3 Temmuz Cuma',      time:'06:00'},
+  {code:'R32M16', day:'2026-07-03', dayLabel:'3 Temmuz Cuma',      time:'21:00'},
+  {code:'R32M14', day:'2026-07-04', dayLabel:'4 Temmuz Cumartesi', time:'01:00'},
+  {code:'R32M15', day:'2026-07-04', dayLabel:'4 Temmuz Cumartesi', time:'04:30'},
+
+  // ELEME — Round of 16
+  {code:'R16M1', day:'2026-07-04', dayLabel:'4 Temmuz Cumartesi', time:'20:00'},
+  {code:'R16M2', day:'2026-07-05', dayLabel:'5 Temmuz Pazar',     time:'00:00'},
+  {code:'R16M3', day:'2026-07-05', dayLabel:'5 Temmuz Pazar',     time:'23:00'},
+  {code:'R16M4', day:'2026-07-06', dayLabel:'6 Temmuz Pazartesi', time:'03:00'},
+  {code:'R16M5', day:'2026-07-06', dayLabel:'6 Temmuz Pazartesi', time:'22:00'},
+  {code:'R16M6', day:'2026-07-07', dayLabel:'7 Temmuz Salı',      time:'03:00'},
+  {code:'R16M7', day:'2026-07-07', dayLabel:'7 Temmuz Salı',      time:'19:00'},
+  {code:'R16M8', day:'2026-07-07', dayLabel:'7 Temmuz Salı',      time:'23:00'},
+
+  // Çeyrek Final
+  {code:'QFM1', day:'2026-07-09', dayLabel:'9 Temmuz Perşembe',  time:'23:00'},
+  {code:'QFM2', day:'2026-07-10', dayLabel:'10 Temmuz Cuma',     time:'22:00'},
+  {code:'QFM3', day:'2026-07-12', dayLabel:'12 Temmuz Pazar',    time:'00:00'},
+  {code:'QFM4', day:'2026-07-12', dayLabel:'12 Temmuz Pazar',    time:'04:00'},
+
+  // Yarı Final
+  {code:'SFM1', day:'2026-07-14', dayLabel:'14 Temmuz Salı',     time:'22:00'},
+  {code:'SFM2', day:'2026-07-15', dayLabel:'15 Temmuz Çarşamba', time:'22:00'},
+
+  // 3.lük + Final
+  {code:'3.LUK', day:'2026-07-19', dayLabel:'19 Temmuz Pazar',   time:'00:00'},
+  {code:'FINAL', day:'2026-07-19', dayLabel:'19 Temmuz Pazar',   time:'22:00'},
+];
+
+// Hızlı erişim için lookup map: code → {day, dayLabel, time}
+const SCHEDULE_BY_CODE = {};
+MATCH_SCHEDULE.forEach(m => { SCHEDULE_BY_CODE[m.code] = m; });
 
 // Round of 32 fixture (Annex C tabanlı — örnek sabit fixture)
 const R32_FIXTURE = [
@@ -1460,16 +1604,9 @@ function renderRank() {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAÇLAR
 // ══════════════════════════════════════════════════════════════════════════════
+// 🆕 getAllMatchCodes — artık MATCH_SCHEDULE sırasını kullanır (tarih+saat sıralı)
 function getAllMatchCodes() {
-  const codes = [];
-  GROUP_KEYS.forEach(g => {
-    for(let mi=0;mi<6;mi++) codes.push(`G${g}M${mi+1}`);
-  });
-  ['R32M1','R32M2','R32M3','R32M4','R32M5','R32M6','R32M7','R32M8',
-   'R32M9','R32M10','R32M11','R32M12','R32M13','R32M14','R32M15','R32M16',
-   'R16M1','R16M2','R16M3','R16M4','R16M5','R16M6','R16M7','R16M8',
-   'QFM1','QFM2','QFM3','QFM4','SFM1','SFM2','3.LUK','FINAL'].forEach(c => codes.push(c));
-  return codes;
+  return MATCH_SCHEDULE.map(m => m.code);
 }
 
 // Cache bracket so we don't rebuild it for every match
@@ -1525,38 +1662,47 @@ function getRoundLabel(code) {
   return '';
 }
 
+// 🆕 renderMatches — TR tarih+saatine göre, tarih başlıklı düzen
 function renderMatches() {
-  const allCodes = getAllMatchCodes();
-  const rounds = {};
-  allCodes.forEach(code => {
-    const rnd = getRoundLabel(code);
-    if(!rounds[rnd]) rounds[rnd] = [];
-    rounds[rnd].push(code);
-  });
-
   let html = '';
-  Object.entries(rounds).forEach(([rnd, codes]) => {
-    html += `<div class="match-section-title">${rnd}</div>`;
-    codes.forEach(code => {
-      const real = T.matchScores[code];
-      const played = !!real;
-      const {t1,t2,t1f,t2f} = getMatchTeams(code);
-      html += `<div class="match-row${played?' played':''}" onclick="openMatchModal('${code}')">
-        <div class="match-row-meta">
-          <span class="match-row-code">${code}</span>
-          <span class="match-row-status ${played?'status-played':'status-pending'}">${played?'OYNANDI':'BEKLIYOR'}</span>
-        </div>
-        <div class="match-row-body">
-          <div class="match-team">${t1f} ${t1}</div>
-          ${played
-            ? `<div class="match-score-disp">${real.h} — ${real.a}</div>`
-            : `<div class="match-score-disp pending">vs</div>`}
-          <div class="match-team right">${t2} ${t2f}</div>
-        </div>
-        ${played ? `<div class="match-tap-hint">↑ Detaylar için tıkla</div>` : ''}
-      </div>`;
-    });
-    html += `<div style="height:8px"></div>`;
+  let lastDay = null;
+
+  MATCH_SCHEDULE.forEach(item => {
+    const code = item.code;
+
+    // Yeni gün başlığı?
+    if(item.day !== lastDay) {
+      const rndIcon = code.startsWith('FINAL') ? '🏆'
+                    : code.startsWith('3.LUK') ? '🥉'
+                    : code.startsWith('SF') ? '🎯'
+                    : code.startsWith('QF') ? '⚔️'
+                    : code.startsWith('R16') ? '🔥'
+                    : code.startsWith('R32') ? '⚡'
+                    : '📅';
+      html += `<div class="match-date-header"><span class="icon">${rndIcon}</span><span class="date">${item.dayLabel}</span></div>`;
+      lastDay = item.day;
+    }
+
+    const real = T.matchScores[code];
+    const played = !!real;
+    const {t1,t2,t1f,t2f} = getMatchTeams(code);
+    const roundLbl = getRoundLabel(code);
+
+    html += `<div class="match-row${played?' played':''}" onclick="openMatchModal('${code}')">
+      <div class="match-row-meta">
+        <span class="match-row-code">${code} · ${roundLbl}</span>
+        <span class="match-row-time">⏰ ${item.time}</span>
+        <span class="match-row-status ${played?'status-played':'status-pending'}">${played?'OYNANDI':'BEKLIYOR'}</span>
+      </div>
+      <div class="match-row-body">
+        <div class="match-team">${t1f} ${t1}</div>
+        ${played
+          ? `<div class="match-score-disp">${real.h} — ${real.a}</div>`
+          : `<div class="match-score-disp pending">vs</div>`}
+        <div class="match-team right">${t2} ${t2f}</div>
+      </div>
+      ${played ? `<div class="match-tap-hint">↑ Detaylar için tıkla</div>` : ''}
+    </div>`;
   });
 
   document.getElementById('matches-content').innerHTML = html;
@@ -1570,8 +1716,11 @@ function openMatchModal(code) {
   if(!real) { showToast('Bu maç henüz oynanmadı', 'warn'); return; }
 
   const {t1,t2} = getMatchTeams(code);
+  const sched = SCHEDULE_BY_CODE[code];
   document.getElementById('modal-title').textContent = `${t1} ${real.h} — ${real.a} ${t2}`;
-  document.getElementById('modal-sub').textContent = `${code} · Puan dağılımı`;
+  let subText = `${code} · Puan dağılımı`;
+  if(sched) subText = `${sched.dayLabel} · ${sched.time} · ${code}`;
+  document.getElementById('modal-sub').textContent = subText;
 
   // Her katılımcı için bu maçtan kaç puan aldı — tüm veri birlikte tutulur
   const isGroupMatch = /^G[A-L]M\d+$/.test(code);
@@ -1631,6 +1780,10 @@ function openMatchModal(code) {
   html += `</tbody></table>`;
   document.getElementById('modal-content').innerHTML = html;
 
+  // 🆕 Admin'se "Resim olarak kopyala" butonunu göster
+  const copyBtn = document.getElementById('modal-copy-img-btn');
+  if(copyBtn) copyBtn.style.display = T.adminUnlocked ? 'flex' : 'none';
+
   document.getElementById('match-modal').classList.add('open');
 }
 
@@ -1639,6 +1792,54 @@ function closeModal(e) {
 }
 function closeMatchModal() {
   document.getElementById('match-modal').classList.remove('open');
+}
+
+// 🆕 Modal'ı resim olarak panoya kopyala (admin için)
+async function copyModalAsImage() {
+  if(typeof html2canvas === 'undefined') {
+    showToast('❌ Resim kütüphanesi yüklenemedi', 'err');
+    return;
+  }
+  const target = document.getElementById('modal-capture-area');
+  if(!target) return;
+
+  showToast('⏳ Resim hazırlanıyor...');
+  try {
+    const canvas = await html2canvas(target, {
+      backgroundColor: '#0f2040',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    // Önce Clipboard API ile dene (modern tarayıcı + HTTPS)
+    let copied = false;
+    if(navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        if(blob) {
+          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+          copied = true;
+        }
+      } catch(e) {
+        console.warn('Clipboard write failed, falling back to download:', e);
+      }
+    }
+
+    if(copied) {
+      showToast('✅ Resim panoya kopyalandı! Maile Ctrl+V ile yapıştırabilirsiniz.');
+    } else {
+      // Yedek: indirme linki
+      const link = document.createElement('a');
+      link.download = `mac-detay-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('📥 Resim indirildi (panoya kopyalama desteklenmiyor)', 'warn');
+    }
+  } catch(e) {
+    console.error('copyModalAsImage error:', e);
+    showToast('❌ Resim oluşturulamadı: ' + e.message, 'err');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1831,24 +2032,39 @@ function getMatchFullLabel(code) {
 
 function populateMatchSelect() {
   const sel = document.getElementById('admin-match-select');
-  const codes = getAllMatchCodes();
   sel.innerHTML = '<option value="">— Maç seçin —</option>';
 
-  // Optgroup'larla round'lara göre grupla
-  const rounds = {};
-  codes.forEach(code => {
-    const rnd = getRoundLabel(code);
-    if(!rounds[rnd]) rounds[rnd] = [];
-    rounds[rnd].push(code);
+  // 🆕 Tarih bazlı gruplama — MATCH_SCHEDULE sırasını koru
+  // Aynı güne ait maçlar tek bir <optgroup> altında listelenir
+  const dayGroups = []; // [{day, dayLabel, items:[...]}]
+  const dayMap = {};
+  MATCH_SCHEDULE.forEach(m => {
+    if(!dayMap[m.day]) {
+      const g = {day:m.day, dayLabel:m.dayLabel, items:[]};
+      dayMap[m.day] = g;
+      dayGroups.push(g);
+    }
+    dayMap[m.day].items.push(m);
   });
 
-  Object.entries(rounds).forEach(([rnd, rndCodes]) => {
+  dayGroups.forEach(({dayLabel, items}) => {
     const grp = document.createElement('optgroup');
-    grp.label = rnd;
-    rndCodes.forEach(code => {
+    grp.label = dayLabel;
+    items.forEach(item => {
+      const code = item.code;
       const real = T.matchScores[code];
       const {t1, t2, t1f, t2f} = getMatchTeams(code);
-      let label = t1 !== '—' ? `${t1f} ${t1} — ${t2} ${t2f}` : code;
+      const rndShort = code.startsWith('G') ? code   // GAM3 gibi
+                     : code.startsWith('R32') ? 'Son32 '+code.slice(3)
+                     : code.startsWith('R16') ? 'Son16 '+code.slice(3)
+                     : code.startsWith('QF')  ? 'ÇF '+code.slice(2)
+                     : code.startsWith('SF')  ? 'YF '+code.slice(2)
+                     : code === '3.LUK' ? '3.lük'
+                     : code === 'FINAL' ? 'FİNAL'
+                     : code;
+      let label = t1 !== '—'
+        ? `${item.time} · ${t1f} ${t1} — ${t2} ${t2f}`
+        : `${item.time} · ${rndShort}`;
       if(real) label = `✅ ${label} (${real.h}–${real.a})`;
       const opt = document.createElement('option');
       opt.value = code;
