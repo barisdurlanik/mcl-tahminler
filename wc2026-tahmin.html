@@ -432,6 +432,171 @@ const GROUPS = {
 };
 const GM = [[0,1,1],[2,3,1],[0,2,2],[1,3,2],[3,0,3],[1,2,3]]; // group matches
 
+// 🆕 GRUP MAÇ TAKVİMİ — TR saati ile her grubun her maçının (mi 0..5) tarih/saati
+// Format: GROUP_SCHEDULE[grupHarfi][mi] = {day, dayLabel, dayShort, time}
+// dayShort: "11 Haz Per" gibi kısa gösterim için
+const GROUP_SCHEDULE = {
+  A: [
+    {day:'2026-06-19', dayLabel:'19 Haziran Cuma',     dayShort:'19 Haz Cum', time:'04:00'}, // GAM1
+    {day:'2026-06-18', dayLabel:'18 Haziran Perşembe', dayShort:'18 Haz Per', time:'19:00'}, // GAM2
+    {day:'2026-06-11', dayLabel:'11 Haziran Perşembe', dayShort:'11 Haz Per', time:'22:00'}, // GAM3
+    {day:'2026-06-12', dayLabel:'12 Haziran Cuma',     dayShort:'12 Haz Cum', time:'05:00'}, // GAM4
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'04:00'}, // GAM5
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'04:00'}, // GAM6
+  ],
+  B: [
+    {day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', dayShort:'24 Haz Çar', time:'22:00'},
+    {day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', dayShort:'24 Haz Çar', time:'22:00'},
+    {day:'2026-06-19', dayLabel:'19 Haziran Cuma',     dayShort:'19 Haz Cum', time:'01:00'},
+    {day:'2026-06-18', dayLabel:'18 Haziran Perşembe', dayShort:'18 Haz Per', time:'22:00'},
+    {day:'2026-06-12', dayLabel:'12 Haziran Cuma',     dayShort:'12 Haz Cum', time:'22:00'},
+    {day:'2026-06-13', dayLabel:'13 Haziran Cumartesi',dayShort:'13 Haz Cmt', time:'22:00'},
+  ],
+  C: [
+    {day:'2026-06-14', dayLabel:'14 Haziran Pazar',    dayShort:'14 Haz Paz', time:'01:00'},
+    {day:'2026-06-14', dayLabel:'14 Haziran Pazar',    dayShort:'14 Haz Paz', time:'04:00'},
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'01:00'},
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'01:00'},
+    {day:'2026-06-20', dayLabel:'20 Haziran Cumartesi',dayShort:'20 Haz Cmt', time:'03:30'},
+    {day:'2026-06-20', dayLabel:'20 Haziran Cumartesi',dayShort:'20 Haz Cmt', time:'01:00'},
+  ],
+  D: [
+    {day:'2026-06-19', dayLabel:'19 Haziran Cuma',     dayShort:'19 Haz Cum', time:'22:00'},
+    {day:'2026-06-20', dayLabel:'20 Haziran Cumartesi',dayShort:'20 Haz Cmt', time:'06:00'},
+    {day:'2026-06-13', dayLabel:'13 Haziran Cumartesi',dayShort:'13 Haz Cmt', time:'04:00'},
+    {day:'2026-06-14', dayLabel:'14 Haziran Pazar',    dayShort:'14 Haz Paz', time:'07:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'05:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'05:00'},
+  ],
+  E: [
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'23:00'},
+    {day:'2026-06-25', dayLabel:'25 Haziran Perşembe', dayShort:'25 Haz Per', time:'23:00'},
+    {day:'2026-06-20', dayLabel:'20 Haziran Cumartesi',dayShort:'20 Haz Cmt', time:'23:00'},
+    {day:'2026-06-21', dayLabel:'21 Haziran Pazar',    dayShort:'21 Haz Paz', time:'03:00'},
+    {day:'2026-06-14', dayLabel:'14 Haziran Pazar',    dayShort:'14 Haz Paz', time:'20:00'},
+    {day:'2026-06-15', dayLabel:'15 Haziran Pazartesi',dayShort:'15 Haz Pzt', time:'02:00'},
+  ],
+  F: [
+    {day:'2026-06-14', dayLabel:'14 Haziran Pazar',    dayShort:'14 Haz Paz', time:'23:00'},
+    {day:'2026-06-15', dayLabel:'15 Haziran Pazartesi',dayShort:'15 Haz Pzt', time:'05:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'02:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'02:00'},
+    {day:'2026-06-20', dayLabel:'20 Haziran Cumartesi',dayShort:'20 Haz Cmt', time:'20:00'},
+    {day:'2026-06-21', dayLabel:'21 Haziran Pazar',    dayShort:'21 Haz Paz', time:'07:00'},
+  ],
+  G: [
+    {day:'2026-06-21', dayLabel:'21 Haziran Pazar',    dayShort:'21 Haz Paz', time:'22:00'},
+    {day:'2026-06-22', dayLabel:'22 Haziran Pazartesi',dayShort:'22 Haz Pzt', time:'04:00'},
+    {day:'2026-06-15', dayLabel:'15 Haziran Pazartesi',dayShort:'15 Haz Pzt', time:'22:00'},
+    {day:'2026-06-16', dayLabel:'16 Haziran Salı',     dayShort:'16 Haz Sal', time:'04:00'},
+    {day:'2026-06-27', dayLabel:'27 Haziran Cumartesi',dayShort:'27 Haz Cmt', time:'06:00'},
+    {day:'2026-06-27', dayLabel:'27 Haziran Cumartesi',dayShort:'27 Haz Cmt', time:'06:00'},
+  ],
+  H: [
+    {day:'2026-06-27', dayLabel:'27 Haziran Cumartesi',dayShort:'27 Haz Cmt', time:'03:00'},
+    {day:'2026-06-27', dayLabel:'27 Haziran Cumartesi',dayShort:'27 Haz Cmt', time:'03:00'},
+    {day:'2026-06-21', dayLabel:'21 Haziran Pazar',    dayShort:'21 Haz Paz', time:'19:00'},
+    {day:'2026-06-22', dayLabel:'22 Haziran Pazartesi',dayShort:'22 Haz Pzt', time:'01:00'},
+    {day:'2026-06-15', dayLabel:'15 Haziran Pazartesi',dayShort:'15 Haz Pzt', time:'19:00'},
+    {day:'2026-06-16', dayLabel:'16 Haziran Salı',     dayShort:'16 Haz Sal', time:'01:00'},
+  ],
+  I: [
+    {day:'2026-06-16', dayLabel:'16 Haziran Salı',     dayShort:'16 Haz Sal', time:'22:00'},
+    {day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', dayShort:'17 Haz Çar', time:'01:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'22:00'},
+    {day:'2026-06-26', dayLabel:'26 Haziran Cuma',     dayShort:'26 Haz Cum', time:'22:00'},
+    {day:'2026-06-23', dayLabel:'23 Haziran Salı',     dayShort:'23 Haz Sal', time:'00:00'},
+    {day:'2026-06-23', dayLabel:'23 Haziran Salı',     dayShort:'23 Haz Sal', time:'03:00'},
+  ],
+  J: [
+    {day:'2026-06-22', dayLabel:'22 Haziran Pazartesi',dayShort:'22 Haz Pzt', time:'20:00'},
+    {day:'2026-06-23', dayLabel:'23 Haziran Salı',     dayShort:'23 Haz Sal', time:'06:00'},
+    {day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', dayShort:'17 Haz Çar', time:'04:00'},
+    {day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', dayShort:'17 Haz Çar', time:'07:00'},
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'05:00'},
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'05:00'},
+  ],
+  K: [
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'02:30'},
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'02:30'},
+    {day:'2026-06-23', dayLabel:'23 Haziran Salı',     dayShort:'23 Haz Sal', time:'20:00'},
+    {day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', dayShort:'24 Haz Çar', time:'05:00'},
+    {day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', dayShort:'17 Haz Çar', time:'20:00'},
+    {day:'2026-06-18', dayLabel:'18 Haziran Perşembe', dayShort:'18 Haz Per', time:'05:00'},
+  ],
+  L: [
+    {day:'2026-06-17', dayLabel:'17 Haziran Çarşamba', dayShort:'17 Haz Çar', time:'23:00'},
+    {day:'2026-06-18', dayLabel:'18 Haziran Perşembe', dayShort:'18 Haz Per', time:'02:00'},
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'00:00'},
+    {day:'2026-06-28', dayLabel:'28 Haziran Pazar',    dayShort:'28 Haz Paz', time:'00:00'},
+    {day:'2026-06-23', dayLabel:'23 Haziran Salı',     dayShort:'23 Haz Sal', time:'23:00'},
+    {day:'2026-06-24', dayLabel:'24 Haziran Çarşamba', dayShort:'24 Haz Çar', time:'02:00'},
+  ],
+};
+
+// Verilen grup için maç indekslerini (mi: 0..5) tarih+saate göre sıralı döner
+function getGroupOrderByDate(grp) {
+  const sched = GROUP_SCHEDULE[grp];
+  if(!sched) return [0,1,2,3,4,5];
+  return [0,1,2,3,4,5].slice().sort((a,b) => {
+    const sa = sched[a], sb = sched[b];
+    if(sa.day !== sb.day) return sa.day.localeCompare(sb.day);
+    return sa.time.localeCompare(sb.time);
+  });
+}
+
+// 🆕 ELEME MAÇ TAKVİMİ — key (r32_0, r16_0, qf_0...) -> {day, dayShort, time}
+const KO_SCHEDULE = {
+  // Round of 32 — key index = R32M(i+1) içindeki i
+  'r32_0':  {day:'2026-06-28', dayShort:'28 Haz Paz', time:'22:00'}, // R32M1
+  'r32_1':  {day:'2026-06-29', dayShort:'29 Haz Pzt', time:'23:30'}, // R32M2
+  'r32_2':  {day:'2026-06-29', dayShort:'29 Haz Pzt', time:'20:00'}, // R32M3
+  'r32_3':  {day:'2026-06-30', dayShort:'30 Haz Sal', time:'04:00'}, // R32M4
+  'r32_4':  {day:'2026-07-01', dayShort:'1 Tem Çar',  time:'00:00'}, // R32M5
+  'r32_5':  {day:'2026-06-30', dayShort:'30 Haz Sal', time:'20:00'}, // R32M6
+  'r32_6':  {day:'2026-07-01', dayShort:'1 Tem Çar',  time:'04:00'}, // R32M7
+  'r32_7':  {day:'2026-07-01', dayShort:'1 Tem Çar',  time:'19:00'}, // R32M8
+  'r32_8':  {day:'2026-07-02', dayShort:'2 Tem Per',  time:'03:00'}, // R32M9
+  'r32_9':  {day:'2026-07-01', dayShort:'1 Tem Çar',  time:'23:00'}, // R32M10
+  'r32_10': {day:'2026-07-03', dayShort:'3 Tem Cum',  time:'02:00'}, // R32M11
+  'r32_11': {day:'2026-07-02', dayShort:'2 Tem Per',  time:'22:00'}, // R32M12
+  'r32_12': {day:'2026-07-03', dayShort:'3 Tem Cum',  time:'06:00'}, // R32M13
+  'r32_13': {day:'2026-07-04', dayShort:'4 Tem Cmt',  time:'01:00'}, // R32M14
+  'r32_14': {day:'2026-07-04', dayShort:'4 Tem Cmt',  time:'04:30'}, // R32M15
+  'r32_15': {day:'2026-07-03', dayShort:'3 Tem Cum',  time:'21:00'}, // R32M16
+  // Round of 16
+  'r16_0':  {day:'2026-07-04', dayShort:'4 Tem Cmt',  time:'20:00'},
+  'r16_1':  {day:'2026-07-05', dayShort:'5 Tem Paz',  time:'00:00'},
+  'r16_2':  {day:'2026-07-05', dayShort:'5 Tem Paz',  time:'23:00'},
+  'r16_3':  {day:'2026-07-06', dayShort:'6 Tem Pzt',  time:'03:00'},
+  'r16_4':  {day:'2026-07-06', dayShort:'6 Tem Pzt',  time:'22:00'},
+  'r16_5':  {day:'2026-07-07', dayShort:'7 Tem Sal',  time:'03:00'},
+  'r16_6':  {day:'2026-07-07', dayShort:'7 Tem Sal',  time:'19:00'},
+  'r16_7':  {day:'2026-07-07', dayShort:'7 Tem Sal',  time:'23:00'},
+  // Çeyrek Final
+  'qf_0':   {day:'2026-07-09', dayShort:'9 Tem Per',  time:'23:00'},
+  'qf_1':   {day:'2026-07-10', dayShort:'10 Tem Cum', time:'22:00'},
+  'qf_2':   {day:'2026-07-12', dayShort:'12 Tem Paz', time:'00:00'},
+  'qf_3':   {day:'2026-07-12', dayShort:'12 Tem Paz', time:'04:00'},
+  // Yarı Final
+  'sf_0':   {day:'2026-07-14', dayShort:'14 Tem Sal', time:'22:00'},
+  'sf_1':   {day:'2026-07-15', dayShort:'15 Tem Çar', time:'22:00'},
+  // 3.lük + Final
+  '3rd_0':  {day:'2026-07-19', dayShort:'19 Tem Paz', time:'00:00'},
+  'final_0':{day:'2026-07-19', dayShort:'19 Tem Paz', time:'22:00'},
+};
+
+// Verilen tur dizisini key'lerine göre tarih+saate sıralar (mevcut index'leri korur)
+function sortKoArrayByDate(arr, prefix) {
+  // arr: [{key:'r32_0',...}, ...]; prefix kullanılmıyor, key zaten içerir
+  return arr.slice().sort((a,b) => {
+    const sa = KO_SCHEDULE[a.key], sb = KO_SCHEDULE[b.key];
+    if(!sa || !sb) return 0;
+    if(sa.day !== sb.day) return sa.day.localeCompare(sb.day);
+    return sa.time.localeCompare(sb.time);
+  });
+}
+
 // FIFA World Cup 2026 Annex C - Tam 495 Senaryo
 // Kaynak: FIFA Regulations for the FIFA World Cup 26 (March 2026)
 // Sütunlar: [1A vs, 1B vs, 1D vs, 1E vs, 1G vs, 1I vs, 1K vs, 1L vs]
@@ -1329,16 +1494,35 @@ function renderGroupContent(grp){
   const scores=S.groupScores[grp];
   let html="";
 
-  // Maçlar
-  GM.forEach(([t1i,t2i,md],mi)=>{
+  // 🆕 Maçları tarih+saate göre sıralı göster (mi sırası bozulmaz, sadece görüntü sırası değişir)
+  const order = getGroupOrderByDate(grp);
+  let lastDay = null;
+
+  order.forEach(mi => {
+    const [t1i,t2i,md] = GM[mi];
     const t1=teams[t1i],t2=teams[t2i];
     const sc=scores[mi];
     const hv=sc.h!==null?sc.h:"", av=sc.a!==null?sc.a:"";
+    const sched = GROUP_SCHEDULE[grp][mi];
+
+    // 🆕 Tarih başlığı — her yeni güne girince ekle
+    if(sched && sched.day !== lastDay) {
+      html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;
+        color:var(--gold);padding:10px 0 4px;margin-top:${lastDay?'14px':'0'};
+        border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:6px;">
+        📅 ${sched.dayLabel}</div>`;
+      lastDay = sched.day;
+    }
+
+    const timeBadge = sched
+      ? `<span class="match-meta-info" style="color:var(--gold);font-weight:700">⏰ ${sched.time}</span>`
+      : `<span class="match-meta-info">Grup ${grp} · ${md}. Tur</span>`;
+
     html+=`
     <div class="match-card">
       <div class="match-meta">
-        <span class="match-meta-info">Grup ${grp} · ${md}. Tur · Maç ${mi+1}</span>
-        <span class="match-badge">GRUP ${grp}</span>
+        ${timeBadge}
+        <span class="match-badge">GRUP ${grp} · ${md}. Tur</span>
       </div>
       <div class="match-body">
         <div class="team-block">
@@ -1526,18 +1710,30 @@ function renderKnockout(){
   const bk=buildBracket();
   let html="";
 
-  html+=renderKoRound("SON 32","16 maç — Birinci, İkinci ve En İyi 8 Üçüncü",
-    bk.r32,"r32","Eleme");
-  html+=renderKoRound("SON 16","Son 32 galipler","r16 yapılıyor...");
-  // r16
+  // 🆕 Her tur kendi içinde tarih+saate göre sıralanır (tur yapısı korunur)
+  html+=`<div class="round-title">SON 32 <span>16 maç — Birinci, İkinci ve En İyi 8 Üçüncü</span></div>`;
+  sortKoArrayByDate(bk.r32).forEach((m)=>{
+    const i = parseInt(m.key.split('_')[1]);
+    html+=koMatchHTML(m,i,"r32");
+  });
+
   html+=`<div class="round-title">SON 16 <span>Son 32 galipleri</span></div>`;
-  bk.r16.forEach((m,i)=>{ html+=koMatchHTML(m,i,"r16"); });
+  sortKoArrayByDate(bk.r16).forEach((m)=>{
+    const i = parseInt(m.key.split('_')[1]);
+    html+=koMatchHTML(m,i,"r16");
+  });
 
   html+=`<div class="round-title">ÇEYREKFİNAL</div>`;
-  bk.qf.forEach((m,i)=>{ html+=koMatchHTML(m,i,"qf"); });
+  sortKoArrayByDate(bk.qf).forEach((m)=>{
+    const i = parseInt(m.key.split('_')[1]);
+    html+=koMatchHTML(m,i,"qf");
+  });
 
   html+=`<div class="round-title">YARI FİNAL</div>`;
-  bk.sf.forEach((m,i)=>{ html+=koMatchHTML(m,i,"sf"); });
+  sortKoArrayByDate(bk.sf).forEach((m)=>{
+    const i = parseInt(m.key.split('_')[1]);
+    html+=koMatchHTML(m,i,"sf");
+  });
 
   html+=`<div class="round-title" style="color:var(--orange)">3.'lük MAÇI <span>${bk.third3.meta}</span></div>`;
   html+=koMatchHTML(bk.third3,0,"3rd",false);
@@ -1561,9 +1757,12 @@ function koMatchHTML(m,i,prefix,isFinal=false){
   const sc=m.sc;
   const hv=sc.h!==null?sc.h:"", av=sc.a!==null?sc.a:"";
   const isFinalCard=isFinal||prefix==="final";
+  // 🆕 Takvimden tarih+saat al
+  const sched = KO_SCHEDULE[m.key];
+  const dateInfo = sched ? `📅 ${sched.dayShort} · ⏰ ${sched.time}` : (m.meta||"");
   return `
   <div class="ko-card${isFinalCard?" final-card":""}">
-    <div class="ko-meta">${prefix.toUpperCase()} M${i+1} · ${m.meta||""}</div>
+    <div class="ko-meta">${prefix.toUpperCase()} M${i+1} · ${dateInfo}</div>
     <div class="ko-body">
       <div class="ko-team${t1.resolved?"":" ko-team-auto"}">
         <span style="font-size:18px">${t1.f}</span>
