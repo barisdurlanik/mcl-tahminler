@@ -265,7 +265,12 @@ body::before{content:'';position:fixed;inset:0;
 <div class="screen active" id="screen-rank">
   <div class="rank-header">
     <div class="sec-title">🏆 SIRALAMA</div>
-    <div style="font-size:10px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;" id="rank-played-info"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <!-- Admin için "Resim olarak kopyala" butonu — sadece admin girişi yapıldığında görünür -->
+      <button id="rank-copy-img-btn" class="btn btn-blue" style="display:none;width:auto;padding:6px 12px;font-size:11px;letter-spacing:1px;margin-top:0;"
+        onclick="copyRankAsImage()">📸 Resim Kopyala</button>
+      <div style="font-size:10px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;" id="rank-played-info"></div>
+    </div>
   </div>
   <div id="rank-content"></div>
 </div>
@@ -1544,6 +1549,9 @@ function renderRank() {
       `<div style="text-align:center;padding:40px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;">
         Henüz tahmin yüklenmedi.<br>Admin panelinden tahmin ekleyebilirsiniz.
       </div>`;
+    // Admin kopyala butonunu gizle (boş tablo için)
+    const btn = document.getElementById('rank-copy-img-btn');
+    if(btn) btn.style.display = 'none';
     return;
   }
 
@@ -1555,23 +1563,38 @@ function renderRank() {
     return a.name.localeCompare(b.name, 'tr');
   });
 
-  // Rozet pozisyonlarını belirle — eşitlikte aynı rozet
-  let html = `<div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
-  <table class="rank-table" style="width:100%;min-width:300px;">
-    <thead>
-      <tr>
-        <th style="width:36px">#</th>
-        <th class="tl">İSİM</th>
-        <th>MAÇ</th>
-        <th>BONUS</th>
-        <th>TOPLAM</th>
-      </tr>
-    </thead>
-    <tbody>`;
+  // 🆕 Tarih başlığı (resim kopyalandığında üstte görünür)
+  const today = new Date();
+  const trMonths = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran',
+                    'Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const dateStr = `${today.getDate()} ${trMonths[today.getMonth()]} ${today.getFullYear()}`;
+
+  // 🆕 Tüm sıralama tablosu "rank-capture-area" div'i ile sarmalanır (resim kopyalama için)
+  let html = `<div id="rank-capture-area" style="background:var(--navy);padding:14px;border-radius:14px;">
+    <div style="text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--gold);line-height:1;">
+        🏆 WC2026 — GÜNCEL SIRALAMA
+      </div>
+      <div style="font-size:11px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;margin-top:4px;">
+        ${dateStr} · ${playedCount} maç oynandı
+      </div>
+    </div>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
+    <table class="rank-table" style="width:100%;min-width:300px;">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th class="tl">İSİM</th>
+          <th>MAÇ</th>
+          <th>BONUS</th>
+          <th>TOPLAM</th>
+        </tr>
+      </thead>
+      <tbody>`;
 
   // Her zaman 3 rozet grubu: puana göre top 3 pozisyon
   // 1. pozisyon = en yüksek puan → altın
-  // 2. pozisyon = 2. farklı puan → gümüş  
+  // 2. pozisyon = 2. farklı puan → gümüş
   // 3. pozisyon = 3. farklı puan → bronz
   const uniqueScores = [...new Set(scored.map(p=>p.total))].sort((a,b)=>b-a);
   const goldScore   = uniqueScores[0];
@@ -1597,8 +1620,64 @@ function renderRank() {
     </tr>`;
   });
 
-  html += `</tbody></table></div>`;
+  html += `</tbody></table></div>
+  </div>`;
   document.getElementById('rank-content').innerHTML = html;
+
+  // 🆕 Admin'se "Sıralamayı Resim Olarak Kopyala" butonunu göster
+  const btn = document.getElementById('rank-copy-img-btn');
+  if(btn) btn.style.display = T.adminUnlocked ? 'flex' : 'none';
+}
+
+// 🆕 Sıralama tablosunu resim olarak panoya kopyala (admin için)
+async function copyRankAsImage() {
+  if(typeof html2canvas === 'undefined') {
+    showToast('❌ Resim kütüphanesi yüklenemedi', 'err');
+    return;
+  }
+  const target = document.getElementById('rank-capture-area');
+  if(!target) {
+    showToast('❌ Sıralama tablosu bulunamadı', 'err');
+    return;
+  }
+
+  showToast('⏳ Resim hazırlanıyor...');
+  try {
+    const canvas = await html2canvas(target, {
+      backgroundColor: '#0a1628',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+
+    // Önce Clipboard API ile dene (modern tarayıcı + HTTPS)
+    let copied = false;
+    if(navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        if(blob) {
+          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+          copied = true;
+        }
+      } catch(e) {
+        console.warn('Clipboard write failed, falling back to download:', e);
+      }
+    }
+
+    if(copied) {
+      showToast('✅ Sıralama resmi panoya kopyalandı! Maile Ctrl+V ile yapıştırabilirsiniz.');
+    } else {
+      // Yedek: indirme linki
+      const link = document.createElement('a');
+      link.download = `wc2026-siralama-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('📥 Resim indirildi (panoya kopyalama desteklenmiyor)', 'warn');
+    }
+  } catch(e) {
+    console.error('copyRankAsImage error:', e);
+    showToast('❌ Resim oluşturulamadı: ' + e.message, 'err');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1994,6 +2073,9 @@ function checkPin() {
     document.getElementById('admin-panel').style.display = 'block';
     populateMatchSelect();
     renderAdminStats();
+    // 🆕 Sıralama sekmesindeki "Resim Kopyala" butonunu hemen görünür yap
+    const rankBtn = document.getElementById('rank-copy-img-btn');
+    if(rankBtn && T.participants.length > 0) rankBtn.style.display = 'flex';
     showToast('✅ Admin girişi başarılı!');
   } else {
     showToast('❌ Hatalı şifre', 'err');
@@ -2006,6 +2088,9 @@ function lockAdmin() {
   document.getElementById('admin-lock-screen').style.display = 'block';
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('pin-input').value = '';
+  // 🆕 Sıralama sekmesindeki "Resim Kopyala" butonunu gizle
+  const rankBtn = document.getElementById('rank-copy-img-btn');
+  if(rankBtn) rankBtn.style.display = 'none';
   navTo('rank');
 }
 
